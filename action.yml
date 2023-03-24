@@ -12,7 +12,7 @@ inputs:
 outputs:
   outputs:
     description: 'JSON-ified `outputs` from the action, e.g. `{"node-version": "18.12.0", "cache-hit": true}`'
-    value: ${{ toJSON(steps.run.outputs) }}
+    value: ${{ steps.run.outputs.outputs }}
 runs:
   using: composite
   steps:
@@ -20,13 +20,13 @@ runs:
       shell: bash
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
-        cat <<DYNAMIC_USES_EOF >./.tmp-dynamic-uses/action.yml
+        cat <<'DYNAMIC_USES_EOF' >./.tmp-dynamic-uses/action.yml
         inputs:
           with:
             default: "{}"
         outputs:
           outputs:
-            value: \${{ toJSON(steps.run.outputs) }}
+            value: ${{ '$' }}{{ toJSON(steps.run.outputs) }}
         runs:
           using: composite
           steps:
