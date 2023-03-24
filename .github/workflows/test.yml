@@ -1,0 +1,24 @@
+name: Test
+on: workflow_call
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      node_version: 18.4.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Dynamic Use
+        uses: ./../dynamic-uses
+        id: setup_node
+        with:
+          uses: "${{ 'actions/setup-node@v3' }}"
+          with: '{ "node-version": "${{ env.node_version }}" }'
+      - name: Validate outputs
+        run: |
+          expected="v${node_version}"
+          actual="${{ fromJSON(steps.setup_node.outputs.outputs)['node-version'] }}"
+          if [[ "$expected" != "$actual" ]]; then
+            echo "::error::output mismatch! expected=$expected, actual=$actual"
+            exit 1
+          fi
