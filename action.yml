@@ -1,5 +1,5 @@
 name: Dynamic Uses
-description: Dynamically resolve and run an action. Workaround for https://github.com/actions/runner/issues/895
+description: Dynamically resolve and run another GitHub action. Workaround for https://github.com/actions/runner/issues/895
 author: Jon Jensen
 inputs:
   uses:
