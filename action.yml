@@ -21,9 +21,6 @@ runs:
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
         cat <<'DYNAMIC_USES_EOF' >./.tmp-dynamic-uses/action.yml
-        inputs:
-          with:
-            default: "{}"
         outputs:
           outputs:
             value: ${{ '$' }}{{ toJSON(steps.run.outputs) }}
