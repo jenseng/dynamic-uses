@@ -17,7 +17,7 @@ Given a step like so:
 If you want your `uses` to be dynamic you can do:
 
 ```yaml
-- uses: jenseng/dymamic-uses@v1
+- uses: jenseng/dynamic-uses@v1
   with:
     # now you can use expressions 🥳
     uses: actions/setup-node@${{ inputs.version }}
