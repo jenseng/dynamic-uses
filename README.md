@@ -51,7 +51,7 @@ Because the `uses` is hardcoded, it will always use `cleanup@v1`. This makes it 
 Taking our example above, we can make it work however we need to with `dynamic-uses`:
 
 ```yaml
-- uses: jenseng/dymamic-uses@v1
+- uses: jenseng/dynamic-uses@v1
   with:
     # ensure we use the right version:
     #  - within this repo, we want the `sha`
