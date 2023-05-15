@@ -8,6 +8,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          foo: []
       - name: Dynamic Use
         uses: ./../dynamic-uses
         id: setup_node
