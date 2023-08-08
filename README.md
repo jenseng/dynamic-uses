@@ -17,7 +17,7 @@ Given a step like so:
 If you want your `uses` to be dynamic you can do:
 
 ```yaml
-- uses: jenseng/dynamic-uses@v1.1
+- uses: jenseng/dynamic-uses@v1
   with:
     # now you can use expressions 🥳
     uses: actions/setup-node@${{ inputs.version }}
@@ -41,22 +41,25 @@ inputs:
 steps:
   - shell: bash
     run: 'some-deploy-command "${{ inputs.stuffToDeploy }}"'
-  - uses: my-cool-org/repo/actions/cleanup@v1
+  - uses: my-cool-org/repo/actions/cleanup@v3
     with:
       stuffToCleanUp: ${{ inputs.stuffToDeploy }}
 ```
 
-Because the `uses` is hardcoded, it will always use `cleanup@v1`. This makes it challenging to test how `deploy` will work with a new version of `cleanup`, as you have to create and trigger one-off workflows to validate a new version before it lands. Ideally you could `use` a path instead, but that only works for workflows that have checked out `my-cool-org/repo`; the `deploy` action is much harder to reuse if you have to do that (i.e. imagine these actions are used by various other repos in the `my-cool-org` org).
+Because the `uses` is hardcoded, it will always use `cleanup@v3`. This makes it challenging to test how `deploy` will work with a new version of `cleanup`, as you have to create and trigger one-off workflows to validate a new version before it lands. Ideally you could `use` a path instead, but that only works for workflows that have checked out `my-cool-org/repo`; the `deploy` action is much harder to reuse if you have to do that (i.e. imagine these actions are used by various other repos in the `my-cool-org` org).
 
 Taking our example above, we can make it work however we need to with `dynamic-uses`:
 
 ```yaml
-- uses: jenseng/dynamic-uses@v1.1
+- uses: jenseng/dynamic-uses@v1
+  env:
+    action_ref: ${{ github.action_ref }}
   with:
     # ensure we use the right version:
     #  - within this repo, we want the `sha`
-    #  - from outside the repo, we want the `action_sha`
-    uses: my-cool-org/repo/actions/cleanup@${{ github.repo == 'my-cool-org/repo' && github.sha || github.action_sha }}
+    #  - from outside the repo, we want the `action_ref`
+    #    (we pass it through env, otherwise it picks up `v1` from `jenseng/dynamic-uses@v1`)
+    uses: my-cool-org/repo/actions/cleanup@${{ github.repo == 'my-cool-org/repo' && github.sha || env.action_ref }}
     with: '{ "stuffToCleanUp": "${{ inputs.stuffToDeploy }}" }'
 ```
 
