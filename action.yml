@@ -27,6 +27,8 @@ runs:
         runs:
           using: composite
           steps:
+          - run: rm -rf ./.tmp-dynamic-uses
+            shell: sh
           - name: Run
             id: run
             uses: ${{ inputs.uses }}
@@ -36,6 +38,6 @@ runs:
       id: run
       uses: ./.tmp-dynamic-uses
     - name: Cleanup
-      if: always()
+      if: always() && steps.run.outcome != 'success'
       shell: bash
       run: rm -rf ./.tmp-dynamic-uses
