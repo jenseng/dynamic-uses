@@ -73,3 +73,7 @@ Because the action is referenced by path, it satisfies the parser. By the time i
 
 - The `with` inputs to the action need to be converted to a single JSON object string (see examples above)
 - Any outputs from the action will be serialized into a single `outputs` JSON object string. You can then access things using helpers like `fromJSON`, e.g. `fromJSON(steps.foo.outputs.outputs).something`
+
+## License
+
+The scripts and documentation in this project are released under the [ISC License](./LICENSE.md)
