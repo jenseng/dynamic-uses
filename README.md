@@ -9,7 +9,7 @@ This can be useful if you are authoring multiple dependent actions within a repo
 Given a step like so:
 
 ```yaml
-- uses: actions/setup-node@v3
+- uses: actions/setup-node@v4
   with:
     node-version: 18
 ```
@@ -23,6 +23,7 @@ If you want your `uses` to be dynamic you can do:
     uses: actions/setup-node@${{ inputs.version }}
     # the `with` needs to be converted to a valid json string
     with: '{ "node-version": 18 }'
+    env: '{ "NODE_OPTIONS": "--openssl-legacy-provider" }'
 ```
 
 ## Why would I want to do this?
@@ -38,12 +39,16 @@ name: Deploy the stuff
 inputs:
   stuffToDeploy:
     description: The stuff
+  someEnvVariable:
+    description: The env
 steps:
   - shell: bash
     run: 'some-deploy-command "${{ inputs.stuffToDeploy }}"'
   - uses: my-cool-org/repo/actions/cleanup@v3
     with:
       stuffToCleanUp: ${{ inputs.stuffToDeploy }}
+    env:
+      someEnvVariable: ${{ inputs.someEnvVariable }}
 ```
 
 Because the `uses` is hardcoded, it will always use `cleanup@v3`. This makes it challenging to test how `deploy` will work with a new version of `cleanup`, as you have to create and trigger one-off workflows to validate a new version before it lands. Ideally you could `use` a path instead, but that only works for workflows that have checked out `my-cool-org/repo`; the `deploy` action is much harder to reuse if you have to do that (i.e. imagine these actions are used by various other repos in the `my-cool-org` org).
@@ -61,6 +66,7 @@ Taking our example above, we can make it work however we need to with `dynamic-u
     #    (we pass it through env, otherwise it picks up `v1` from `jenseng/dynamic-uses@v1`)
     uses: my-cool-org/repo/actions/cleanup@${{ github.repo == 'my-cool-org/repo' && github.sha || env.action_ref }}
     with: '{ "stuffToCleanUp": "${{ inputs.stuffToDeploy }}" }'
+    env: '{ "someEnvVariable": "${{ inputs.someEnvVariable }}" }'
 ```
 
 ## How does it work?
