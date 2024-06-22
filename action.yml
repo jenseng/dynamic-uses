@@ -32,7 +32,7 @@ runs:
           - name: Run
             id: run
             uses: ${{ inputs.uses }}
-            with: ${{ inputs.with || '{}' }}
+            with: ${{ fromJSON(inputs.with) || fromJSON('{}') }}
         DYNAMIC_USES_EOF
     - name: Run
       id: run
