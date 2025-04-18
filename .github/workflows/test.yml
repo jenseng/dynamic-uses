@@ -8,12 +8,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Mask a fake "secret"
+        run: echo "::add-mask::this is a fake secret"
       - name: Dynamic Use
         uses: ./../dynamic-uses
         id: setup_node
         with:
           uses: "${{ 'actions/setup-node@v3' }}"
-          with: '{ "node-version": "${{ env.node_version }}" }'
+          with: |
+            {
+              "node-version": ${{ toJSON(env.node_version) }},
+              "fakeSecret":  "this is a fake secret",
+              "realSecret": ${{ toJSON(secrets.TEST_SECRET) }}
+            }
       - name: Validate outputs
         run: |
           expected="v${node_version}"
