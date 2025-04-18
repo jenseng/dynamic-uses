@@ -73,6 +73,7 @@ Because the action is referenced by path, it satisfies the parser. By the time i
 
 - The `with` inputs to the action need to be converted to a single JSON object string (see examples above)
 - Any outputs from the action will be serialized into a single `outputs` JSON object string. You can then access things using helpers like `fromJSON`, e.g. `fromJSON(steps.foo.outputs.outputs).something`
+- GitHub Actions has several bugs impacting nested composite actions (e.g. https://github.com/actions/runner/issues/2800, https://github.com/actions/runner/issues/2009). When you use dynamic-uses to call another composite action, these bugs can cause problems like blank/wrong `inputs` or `ouputs` within that action. As a workaround, you can try passing data along with `GITHUB_ENV` instead.
 
 ## License
 
