@@ -1,0 +1,17 @@
+name: echo action
+description: return the input as an output
+inputs:
+  echo:
+    description: what should i say?
+    required: true
+outputs:
+  echo:
+    description: what i said
+    value: ${{ inputs.echo }}
+runs:
+  using: composite
+  steps:
+    - env:
+        echo: ${{ inputs.echo }}
+      run: echo "$echo"
+      shell: bash
