@@ -28,7 +28,7 @@ runs:
           using: composite
           steps:
           - run: rm -rf ./.tmp-dynamic-uses
-            shell: sh
+            shell: bash
           - name: Run
             id: run
             uses: ${{ inputs.uses }}

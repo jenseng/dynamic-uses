@@ -2,7 +2,11 @@ name: Test
 on: workflow_call
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
     env:
       expected: |-
         here is some "text". this is not a newline: [\n]
@@ -19,6 +23,7 @@ jobs:
       - name: Validate outputs
         env:
           actual: ${{ fromJSON(steps.parrot.outputs.outputs).echo }}
+        shell: bash
         run: |
           if [[ "$expected" != "$actual" ]]; then
             echo "::error::output mismatch! expected=$expected, actual=$actual"
