@@ -32,10 +32,11 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           token: ${{ steps.generate-token.outputs.token }}
+          fetch-depth: 0
       - name: Determine version
         shell: bash
         run: |
-          last_version="$(git tag --merged HEAD | grep -E '^v\d+\.\d+\.\d+$' | sort --version-sort | tail -n 1 | sed 's~v~~')"
+          last_version="$(git tag --merged HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort --version-sort | tail -n 1 | sed 's~v~~')"
           if [[ $version == patch ]]; then
             full_version="$(echo $last_version | awk -F. -v OFS=. '{$3=$3+1;print}')"
           elif [[ $version == minor ]]; then
@@ -49,18 +50,18 @@ jobs:
             exit 1
           fi
           echo "full_version=$full_version" >> "$GITHUB_ENV"
-          echo "major_version=$(echo "$version" | cut -d. -f1)" >> "$GITHUB_ENV"
+          echo "major_version=$(echo "$full_version" | cut -d. -f1)" >> "$GITHUB_ENV"
       - name: Create release tags
         shell: bash
         run: |
           git tag "v${full_version}"
-          git tag "v${major_version}"
+          git tag -f "v${major_version}"
       - name: Push tags
-        if: inputs.dry-run == 'false'
+        if: (!inputs.dry-run)
         shell: bash
         run: git push --tags -f
       - name: Create release
-        if: inputs.dry-run == 'false'
+        if: (!inputs.dry-run)
         shell: bash
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
