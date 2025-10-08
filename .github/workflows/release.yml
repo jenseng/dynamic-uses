@@ -1,0 +1,71 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit sha or branch of the release
+        required: false
+        default: main
+      version:
+        description: Version to release
+        required: true
+        default: patch
+      dry-run:
+        description: Preview the tags/release without actually creating them
+        required: false
+        type: boolean
+        default: false
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    env:
+      version: ${{ inputs.version }}
+    steps:
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PUSH_ID }}
+          private-key: ${{ secrets.PUSH_KEY }}
+      - name: Check out code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Determine version
+        shell: bash
+        run: |
+          last_version="$(git tag --merged HEAD | grep -E '^v\d+\.\d+\.\d+$' | sort --version-sort | tail -n 1 | sed 's~v~~')"
+          if [[ $version == patch ]]; then
+            full_version="$(echo $last_version | awk -F. -v OFS=. '{$3=$3+1;print}')"
+          elif [[ $version == minor ]]; then
+            full_version="$(echo $last_version | awk -F. -v OFS=. '{$2=$2+1;$3=0;print}')"
+          elif [[ $version == major ]]; then
+            full_version="$(echo $last_version | awk -F. -v OFS=. '{$1=$1+1;$2=0;$3=0;print}')"
+          elif [[ $version =~ ^\d+\.\d+\.\d+$ ]]; then
+            full_version="$version"
+          else
+            echo "::error::Invalid version: expected patch|minor|major or X.Y.Z"
+            exit 1
+          fi
+          echo "full_version=$full_version" >> "$GITHUB_ENV"
+          echo "major_version=$(echo "$version" | cut -d. -f1)" >> "$GITHUB_ENV"
+      - name: Create release tags
+        shell: bash
+        run: |
+          git tag "v${full_version}"
+          git tag "v${major_version}"
+      - name: Push tags
+        if: inputs.dry-run == 'false'
+        shell: bash
+        run: git push --tags -f
+      - name: Create release
+        if: inputs.dry-run == 'false'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          gh release create "${full_version}" \
+            --title "${full_version}" \
+            --notes "Release ${full_version}" \
+            --target "$(git rev-parse HEAD)"
