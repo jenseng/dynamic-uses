@@ -82,9 +82,14 @@ By using a multi-line string, you can keep things fairly manageable, and dealing
 For example, instead of this:
 
 ```yaml
-with: '{ "environment": "test", "cluster": "", "user": "Reilly O\'Reilly" }'
+with: '{ "environment": "test", "cluster": "", "user": "Reilly O''Reilly" }'
 ```
 
+or this:
+
+```yaml
+with: "{ \"environment\": \"test\", \"cluster\": \"\", \"user\": \"Reilly O'Reilly\" }"
+```
 
 Prefer this:
 
@@ -99,7 +104,7 @@ with: |
 
 ### Use `toJSON` for anything dynamic
 
-If you have dynamic bits you are including in the `with` string, you should use `toJSON` to ensure they are handled correctly. This will protect against malicious user input (e.g. `github.event.pull_request.title`), as well as mistakes that can break quoting (e.g. `env.trustedValueThatMightHaveQuotes`).
+If you have any expressions in the `with` string, you should use `toJSON` to ensure they are handled correctly. This will protect against malicious user input (e.g. `github.event.pull_request.title`), as well as mistakes that can break quoting or escape sequences (e.g. `env.trustedValueThatMightHaveQuotes`).
 
 For example, instead of this:
 
@@ -123,11 +128,21 @@ with: |
 
 ```
 
-
 ## Gotchas/limitations
 
 - The `with` inputs to the action need to be converted to a single JSON object string (see examples above)
-- Any outputs from the action will be serialized into a single `outputs` JSON object string. You can then access things using helpers like `fromJSON`, e.g. `fromJSON(steps.foo.outputs.outputs).something`
+- All outputs from the action will be serialized as a JSON object output named `outputs` . You can access specific outputs by using the `fromJSON` helper in an expression. For example:
+    ```yaml
+    - id: setup_node
+      uses: jenseng/dynamic-uses@v1
+      with:
+        uses: actions/setup-node@${{ inputs.version }}
+        with: '{ "node-version": 18 }'
+    - env:
+        # pull the node-version out of the outputs
+        node_version: ${{ fromJSON(steps.setup_node.outputs.outputs).node-version }}
+      run: echo "Installed $node_version"
+   ```
 - GitHub Actions has several bugs impacting nested composite actions (e.g. https://github.com/actions/runner/issues/2800, https://github.com/actions/runner/issues/2009). When you use dynamic-uses to call another composite action, these bugs can cause problems like blank/wrong `inputs` or `ouputs` within that action. As a workaround, you can try passing data along with `GITHUB_ENV` instead.
 
 ## License
