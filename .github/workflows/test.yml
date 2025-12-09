@@ -17,9 +17,8 @@ jobs:
         uses: ./.
         id: parrot
         with:
-          uses: ./.github/workflows/test
-          with: |
-            { "echo": ${{ toJSON(env.expected) }} }
+          $uses: ./.github/workflows/test
+          echo: ${{ env.expected }}
       - name: Validate outputs
         env:
           actual: ${{ fromJSON(steps.parrot.outputs.outputs).echo }}
