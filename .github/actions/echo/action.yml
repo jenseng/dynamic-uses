@@ -3,7 +3,9 @@ description: return the input as an output
 inputs:
   echo:
     description: what should i say?
-    required: true
+    default: 🙊
+  ignored:
+    description: this doesn't matter
 outputs:
   echo:
     description: what i said
