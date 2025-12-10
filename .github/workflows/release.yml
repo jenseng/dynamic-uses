@@ -18,21 +18,17 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       version: ${{ inputs.version }}
     steps:
-      - name: Generate token
-        id: generate-token
-        uses: actions/create-github-app-token@v2
-        with:
-          app-id: ${{ secrets.PUSH_ID }}
-          private-key: ${{ secrets.PUSH_KEY }}
       - name: Check out code
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref }}
-          token: ${{ steps.generate-token.outputs.token }}
           fetch-depth: 0
+          filter: "tree:0"
       - name: Determine version
         shell: bash
         run: |
@@ -64,7 +60,7 @@ jobs:
         if: (!inputs.dry-run)
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           gh release create "${full_version}" \
             --title "${full_version}" \
