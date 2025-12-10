@@ -49,3 +49,25 @@ jobs:
         with:
           expected: 🙊
           actual: ${{ fromJSON(steps.no-inputs.outputs.outputs).echo }}
+  test-invalid-inputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: attempt command substitution via uses
+        id: command-substitution
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo$(echo secret>ohno.txt)
+        continue-on-error: true
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: failure
+          actual: ${{ steps.command-substitution.outcome }}
+      - id: verify-command-didnt-run
+        shell: bash
+        run: |
+          if [ -f ohno.txt ]; then
+            echo "::error::Expected command substitution not to happen"
+            exit 1
+          fi
