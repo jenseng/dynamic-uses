@@ -1,0 +1,22 @@
+name: Assert Equal
+description: Testing action to assert whether two values are equal
+inputs:
+  expected:
+    description: expected value
+    required: true
+  actual:
+    description: actual value
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: assert-equal
+      shell: bash
+      env:
+        expected: ${{ inputs.expected }}
+        actual: ${{ inputs.actual }}
+      run: |
+        if [[ "$expected" != "$actual" ]]; then
+          echo "::error::Expected \"$expected\", got \"$actual\""
+          exit 1
+        fi

@@ -10,22 +10,42 @@ jobs:
     env:
       expected: |-
         here is some "text". this is not a newline: [\n]
+        but this is on another line
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Dynamic Use
+        uses: actions/checkout@v6
+      - name: YAML inputs
         uses: ./.
-        id: parrot
+        id: yaml
         with:
-          uses: ./.github/workflows/test
+          uses: ./.github/actions/echo
           with: |
-            { "echo": ${{ toJSON(env.expected) }} }
-      - name: Validate outputs
-        env:
-          actual: ${{ fromJSON(steps.parrot.outputs.outputs).echo }}
-        shell: bash
-        run: |
-          if [[ "$expected" != "$actual" ]]; then
-            echo "::error::output mismatch! expected=$expected, actual=$actual"
-            exit 1
-          fi
+            echo: ${{ toJSON(env.expected) }}
+            ignored: whatever
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: ${{ env.expected }}
+          actual: ${{ fromJSON(steps.yaml.outputs.outputs).echo }}
+      - name: JSON inputs
+        uses: ./.
+        id: json
+        with:
+          uses: ./.github/actions/echo
+          with: |
+            {
+              "echo": ${{ toJSON(env.expected) }},
+              "ignored": "whatever"
+            }
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: ${{ env.expected }}
+          actual: ${{ fromJSON(steps.json.outputs.outputs).echo }}
+      - name: No inputs
+        uses: ./.
+        id: no-inputs
+        with:
+          uses: ./.github/actions/echo
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: 🙊
+          actual: ${{ fromJSON(steps.no-inputs.outputs.outputs).echo }}

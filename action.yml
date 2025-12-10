@@ -6,7 +6,7 @@ inputs:
     description: Action reference or path, e.g. `actions/setup-node@v3`
     required: true
   with:
-    description: 'JSON-ified `inputs` for the action, e.g. `{"node-version": "18"}`'
+    description: 'YAML/JSON string of `inputs` for the action, e.g. `node-version: 18` or `{"node-version": "18"}`'
     required: false
     default: "{}"
 outputs:
@@ -18,12 +18,14 @@ runs:
   steps:
     - name: Setup
       shell: bash
+      env:
+        with: ${{ inputs.with }}
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
-        cat <<'DYNAMIC_USES_EOF' >./.tmp-dynamic-uses/action.yml
+        cat <<DYNAMIC_USES_EOF >./.tmp-dynamic-uses/action.yml
         outputs:
           outputs:
-            value: ${{ '$' }}{{ toJSON(steps.run.outputs) }}
+            value: ${{ '\$' }}{{ toJSON(steps.run.outputs) }}
         runs:
           using: composite
           steps:
@@ -31,8 +33,9 @@ runs:
             shell: bash
           - name: Run
             id: run
-            uses: ${{ inputs.uses }}
-            with: ${{ inputs.with || '{}' }}
+            uses: ${{ toJSON(inputs.uses) }}
+            with:
+        $(echo "$with" | sed 's/^/      /')
         DYNAMIC_USES_EOF
     - name: Run
       id: run
