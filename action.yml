@@ -19,6 +19,7 @@ runs:
     - name: Setup
       shell: bash
       env:
+        uses: ${{ inputs.uses }}
         with: ${{ inputs.with }}
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
@@ -33,7 +34,7 @@ runs:
             shell: bash
           - name: Run
             id: run
-            uses: ${{ toJSON(inputs.uses) }}
+            uses: '$(echo "$uses" | sed "s/'/''/g")'
             with:
         $(echo "$with" | sed 's/^/      /')
         DYNAMIC_USES_EOF
