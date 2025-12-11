@@ -36,7 +36,7 @@ runs:
             id: run
             uses: '$(echo "$uses" | sed "s/'/''/g")'
             with:
-        $(echo "$with" | sed 's/^/      /')
+        $(echo "$with" | sed -E "s/^/      /; s/\\\$\\{\\{/\${{'$'}}{{'\$'}}{{/g")
         DYNAMIC_USES_EOF
     - name: Run
       id: run
