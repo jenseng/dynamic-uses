@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: attempt command substitution via uses
+      - name: Attempt command substitution via uses
         id: command-substitution
         uses: ./.
         with:
@@ -71,3 +71,16 @@ jobs:
             echo "::error::Expected command substitution not to happen"
             exit 1
           fi
+      - name: Attempt expression injection
+        uses: ./.
+        id: expression-injection
+        with:
+          uses: ./.github/actions/echo
+          with: |
+            echo: ${{ '$' }}{{ env.expected }}
+            ignored: whatever
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: "${{ '$' }}{{ env.expected }}"
+          actual: ${{ fromJSON(steps.expression-injection.outputs.outputs).echo }}
+  
