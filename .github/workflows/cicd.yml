@@ -3,8 +3,22 @@ on:
   push:
     branches:
       - main
+      - output-test
 concurrency:
   group: cicd
 jobs:
   test:
     uses: ./.github/workflows/test.yml
+  output-test:
+    runs-on: ubuntu-latest
+    steps:
+      - id: set-outputs
+        run: |
+          echo "case=case" >> "$GITHUB_OUTPUT"
+          echo "CASE=CASE" >> "$GITHUB_OUTPUT"
+          echo "cAsE=cAsE" >> "$GITHUB_OUTPUT"
+          echo "what can i put in here? 🤔=what can i put in here? 🤔" >> "$GITHUB_OUTPUT"
+      - env:
+          outputs: ${{ toJSON(steps.set-outputs.outputs) }}
+        run: |
+          echo "outputs=$outputs"
