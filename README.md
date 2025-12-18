@@ -139,7 +139,7 @@ with: |
 ## Gotchas/limitations
 
 - The `with` inputs to the action need to be converted to a YAML mapping string (see examples above)
-- All outputs from the action will be serialized as a JSON object output named `outputs` . You can access specific outputs by using the `fromJSON` helper in an expression. For example:
+- All outputs from the action will be serialized as a JSON object output named `outputs`. You can access specific outputs by using the `fromJSON` helper in an expression. For example:
     ```yaml
     - id: setup_node
       uses: jenseng/dynamic-uses@v1

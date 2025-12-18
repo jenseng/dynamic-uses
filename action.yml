@@ -21,12 +21,15 @@ runs:
       env:
         uses: ${{ inputs.uses }}
         with: ${{ inputs.with }}
+        # inject the outputs value expression via env so that we can avoid
+        # GHA+shell escaping complications 😅
+        outputs: ${{ '${{ toJSON(steps.run.outputs) }}' }}
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
         cat <<DYNAMIC_USES_EOF >./.tmp-dynamic-uses/action.yml
         outputs:
           outputs:
-            value: ${{ '\$' }}{{ toJSON(steps.run.outputs) }}
+            value: $outputs
         runs:
           using: composite
           steps:
