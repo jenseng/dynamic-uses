@@ -105,7 +105,7 @@ Prefix to use for the output environment variable names, e.g. `setup_node_`. Imp
 
 Whether to capitalize environment variable names. Defaults to `false`. Implies `env-outputs: true` if set explicitly.
 
-### `env-outputs-onconflict`
+### `env-outputs-on-conflict`
 
 Error handling behavior when an output environment variable conflicts with an existing variable of the same name. Defaults to `overwrite`. Possible values are:
 - `overwrite`: Overwrite the existing environment variable, and emit a warning
@@ -144,7 +144,7 @@ If you find this too cumbersome to use, you can specify [`env-outputs: true`](#e
 - run: echo "Installed $node_version"
 ```
 
-Note that could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-onconflict`](#env-outputs-onconflict).
+Note that could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-on-conflict`](#env-outputs-on-conflict).
 
 ## Why would I want to do this?
 

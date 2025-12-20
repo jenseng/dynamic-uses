@@ -18,9 +18,17 @@ inputs:
   env-outputs-upcase:
     description: "Whether to capitalize environment variable names. Default to `false`. Implies `env-outputs: true` if set explicitly"
     required: false
-  env-outputs-onconflict:
+  env-outputs-on-conflict:
     description: "Error handling behavior when an output environment variable conflicts with an existing variable of the same name. Defaults to `overwrite`. Possible values are: `overwrite`, `preserve`, `error`. Implies `env-outputs: true` if set explicitly"
     required: false
+  # undocumented inputs to work around a runner bug: https://github.com/actions/runner/issues/2473#issuecomment-1776051383
+  # if we try to infer these from within a step, they may be incorrect
+  dynamic-uses-repository:
+    description: "internal use only: inferred action ref"
+    default: ${{ github.action_repository || github.repository }}
+  dynamic-uses-ref:
+    description: "internal use only: inferred action ref"
+    default: ${{ github.action_ref || github.sha }}
 outputs:
   outputs:
     description: 'JSON-ified `outputs` from the action, e.g. `{"node-version": "v18.12.0", "cache-hit": true}`'
@@ -31,73 +39,46 @@ runs:
     - name: Setup
       shell: bash
       env:
-        uses: ${{ inputs.uses }}
+        uses: ${{ toJSON(inputs.uses) }}
         with: ${{ inputs.with }}
         # inject the outputs value expression via env so that we can avoid
         # GHA+shell escaping complications 😅
-        outputs: ${{ '${{ toJSON(steps.run.outputs) }}' }}
+        outputs_expression: ${{ '${{ toJSON(steps.run.outputs) }}' }}
+        should_set_env_vars: ${{ inputs.env-outputs != 'false' && (inputs.env-outputs || inputs.env-outputs-prefix || inputs.env-outputs-upcase || inputs.env-outputs-on-conflict) && true || false }}
+        env_outputs_prefix: ${{ toJSON(inputs.env-outputs-prefix) }}
+        env_outputs_upcase: ${{ inputs.env-outputs-upcase == 'true' }}
+        env_outputs_on_conflict: ${{ toJSON(inputs.env-outputs-on-conflict || 'overwrite') }}
+        dynamic_uses_repository: ${{ inputs.dynamic-uses-repository }}
+        dynamic_uses_ref: ${{ inputs.dynamic-uses-ref }}
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
         cat <<DYNAMIC_USES_EOF >./.tmp-dynamic-uses/action.yml
         outputs:
           outputs:
-            value: $outputs
+            value: ${outputs_expression}
         runs:
           using: composite
           steps:
-          - run: rm -rf ./.tmp-dynamic-uses
+          - name: Remove temp action
+            run: rm -rf ./.tmp-dynamic-uses
             shell: bash
           - name: Run
             id: run
-            uses: '$(echo "$uses" | sed "s/'/''/g")'
+            uses: ${uses}
             with:
         $(echo "$with" | sed -E "s/^/      /; s/\\\$\\{\\{/\${{'$'}}{{'\$'}}{{/g")
+          - name: Export environment variables
+            if: always() && ${should_set_env_vars}
+            uses: ${dynamic_uses_repository}/set-env-vars@${dynamic_uses_ref}
+            with:
+              variables: ${outputs_expression}
+              prefix: ${env_outputs_prefix}
+              upcase: ${env_outputs_upcase}
+              on-conflict: ${env_outputs_on_conflict}
         DYNAMIC_USES_EOF
     - name: Run
       id: run
       uses: ./.tmp-dynamic-uses
-    - name: Set output environment variables
-      if: inputs.env-outputs != 'false' && (inputs.env-outputs || inputs.env-outputs-prefix || inputs.env-outputs-upcase || inputs.env-outputs-onconflict)
-      env:
-        step_outputs: ${{ steps.run.outputs.outputs }}
-        env_outputs_prefix: ${{ inputs.env-outputs-prefix }}
-        env_outputs_upcase: ${{ inputs.env-outputs-upcase == 'true' }}
-        env_outputs_onconflict: ${{ inputs.env-outputs-onconflict || 'overwrite' }}
-      shell: bash
-      run: |
-        if ! [[ "$env_outputs_onconflict" =~ ^(overwrite|preserve|error)$ ]]; then
-          echo "::error::Invalid env-outputs-onconflict value: '$env_outputs_onconflict'. Expected 'overwrite', 'preserve', or 'error'."
-          exit 1
-        fi
-        for key in $(echo "$step_outputs" | jq -r 'keys[]'); do
-          value="$(echo "$step_outputs" | jq -r --arg key "$key" '.[$key]')"
-          if [[ -n "$env_outputs_prefix" ]]; then
-            key="${env_outputs_prefix}${key}"
-          fi
-          if [[ "$env_outputs_upcase" == "true" ]]; then
-            key="$(echo "$key" | tr '[:lower:]' '[:upper:]')"
-          else
-            key="$(echo "$key" | tr '[:upper:]' '[:lower:]')"
-          fi
-          key="$(echo "$key" | sed -E 's/[^a-zA-Z0-9_]/_/g')"
-          if printenv "$key" &>/dev/null; then
-            if [[ "$env_outputs_onconflict" == "overwrite" ]]; then
-              echo "::warning::Environment variable '$key' already exists, overwriting with value from action output"
-            elif [[ "$env_outputs_onconflict" == "preserve" ]]; then
-              echo "::warning::Environment variable '$key' already exists, preserving existing value"
-              continue
-            else
-              echo "::error::Environment variable '$key' already exists, and env-outputs-onconflict is set to 'error'"
-              exit 1
-            fi
-          fi
-          echo "exporting $key=$value"
-          {
-            echo "$key<<__DYNAMIC_USES_ENV_OUTPUT_EOF"
-            echo "$value"
-            echo "__DYNAMIC_USES_ENV_OUTPUT_EOF"
-          } >> "$GITHUB_ENV"
-        done
     - name: Cleanup
       if: always() && steps.run.outcome != 'success'
       shell: bash
