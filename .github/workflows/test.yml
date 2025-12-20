@@ -83,4 +83,77 @@ jobs:
         with:
           expected: "${{ '$' }}{{ env.expected }}"
           actual: ${{ fromJSON(steps.expression-injection.outputs.outputs).echo }}
-  
+  test-env-outputs:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Test env outputs
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs: true
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.a_z }} # lowercased and underscored by dynamic-uses
+      - name: Test env outputs with prefix
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-prefix: test_
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.test_a_z }}
+      - name: Test env outputs with upcase
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-upcase: true
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.A_Z }}
+      - name: Test env outputs with onconflict=overwrite
+        uses: ./.
+        env:
+          overwrite_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-onconflict: overwrite
+          env-outputs-prefix: overwrite_
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: 🙊
+          actual: ${{ env.overwrite_echo }}
+      - name: Test env outputs with onconflict=preserve
+        uses: ./.
+        env:
+          preserve_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-onconflict: preserve
+          env-outputs-prefix: preserve_
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: "" # blank, since it's preserved (it was only "uh-oh" within the step)
+          actual: ${{ env.preserve_echo }}
+      - name: Test env outputs with onconflict=error
+        id: env-outputs-with-onconflict-error
+        continue-on-error: true
+        uses: ./.
+        env:
+          error_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-onconflict: error
+          env-outputs-prefix: error_
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: failure
+          actual: ${{ steps.env-outputs-with-onconflict-error.outcome }}
