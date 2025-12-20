@@ -10,6 +10,9 @@ outputs:
   echo:
     description: what i said
     value: ${{ inputs.echo }}
+  a-Z:
+    description: the alphabet, lower and upper case
+    value: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 runs:
   using: composite
   steps:

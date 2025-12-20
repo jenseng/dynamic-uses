@@ -1,0 +1,20 @@
+{
+  "name": "set-env-vars",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.3",
+    "@types/node": "^24.10.4",
+    "tsdown": "^0.18.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@actions/core": "^2.0.1"
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
