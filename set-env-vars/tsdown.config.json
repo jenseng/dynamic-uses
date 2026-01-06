@@ -1,0 +1,4 @@
+{
+  "entry": "main.ts",
+  "target": "node24"
+}

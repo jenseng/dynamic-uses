@@ -83,4 +83,114 @@ jobs:
         with:
           expected: "${{ '$' }}{{ env.expected }}"
           actual: ${{ fromJSON(steps.expression-injection.outputs.outputs).echo }}
-  
+  test-env-outputs:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Test env outputs
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs: true
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.a_z }} # lowercased and underscored by dynamic-uses
+      - name: Test env outputs with prefix
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-prefix: test
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.test_a_z }}
+      - name: Test env outputs with upcase
+        uses: ./.
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-upcase: true
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+          actual: ${{ env.A_Z }}
+      - name: Test env outputs with on-conflict=overwrite
+        uses: ./.
+        env:
+          overwrite_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-on-conflict: overwrite
+          env-outputs-prefix: overwrite
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: 🙊
+          actual: ${{ env.overwrite_echo }}
+      - name: Test env outputs with on-conflict=preserve
+        uses: ./.
+        env:
+          preserve_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-on-conflict: preserve
+          env-outputs-prefix: preserve
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: "" # blank, since it's preserved (it was only "uh-oh" within the step)
+          actual: ${{ env.preserve_echo }}
+      - name: Test env outputs with on-conflict=error
+        id: env-outputs-with-on-conflict-error
+        continue-on-error: true
+        uses: ./.
+        env:
+          error_echo: uh-oh
+        with:
+          uses: ./.github/actions/echo
+          env-outputs-on-conflict: error
+          env-outputs-prefix: error
+      - uses: ./.github/actions/assert-equal
+        with:
+          expected: failure
+          actual: ${{ steps.env-outputs-with-on-conflict-error.outcome }}
+  check-set-env-vars:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: set-env-vars
+      - name: Install dependencies
+        run: npm ci
+        working-directory: set-env-vars
+      - name: Format
+        run: npm run format
+        working-directory: set-env-vars
+      - name: Check for formatting changes
+        run: |
+          git diff --exit-code || {
+            echo "::error::set-env-vars is not formatted. Did you forget to run 'npm run format'?";
+            exit 1;
+          }
+        working-directory: set-env-vars
+      - name: Test
+        run: npm run test
+        working-directory: set-env-vars
+      - name: Build
+        run: npm run build
+        working-directory: set-env-vars
+      - name: Check for changes
+        run: |
+          git diff --exit-code || {
+            echo "::error::dist is not up to date. Did you forget to run 'npm run build'?";
+            exit 1;
+          }
+        working-directory: set-env-vars

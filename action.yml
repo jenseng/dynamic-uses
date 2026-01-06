@@ -9,6 +9,26 @@ inputs:
     description: 'YAML/JSON string of `inputs` for the action, e.g. `node-version: 18` or `{"node-version": "18"}`'
     required: false
     default: "{}"
+  env-outputs:
+    description: "Whether to set an environment variable for each of the action's outputs. Defaults to `false`."
+    required: false
+  env-outputs-prefix:
+    description: "Prefix to use for the output environment variable names. Implies `env-outputs: true`"
+    required: false
+  env-outputs-upcase:
+    description: "Whether to capitalize all letters in environment variable names. Default to `false`. Implies `env-outputs: true` if set explicitly"
+    required: false
+  env-outputs-on-conflict:
+    description: "Error handling behavior when an output environment variable conflicts with an existing variable of the same name. Defaults to `overwrite`. Possible values are: `overwrite`, `preserve`, `error`. Implies `env-outputs: true` if set explicitly"
+    required: false
+  # undocumented inputs to work around a runner bug: https://github.com/actions/runner/issues/2473#issuecomment-1776051383
+  # if we try to infer these from within a step, they may be incorrect
+  dynamic-uses-repository:
+    description: "internal use only: inferred action ref"
+    default: ${{ github.action_repository || github.repository }}
+  dynamic-uses-ref:
+    description: "internal use only: inferred action ref"
+    default: ${{ github.action_ref || github.sha }}
 outputs:
   outputs:
     description: 'JSON-ified `outputs` from the action, e.g. `{"node-version": "v18.12.0", "cache-hit": true}`'
@@ -19,27 +39,42 @@ runs:
     - name: Setup
       shell: bash
       env:
-        uses: ${{ inputs.uses }}
+        uses: ${{ toJSON(inputs.uses) }}
         with: ${{ inputs.with }}
         # inject the outputs value expression via env so that we can avoid
         # GHA+shell escaping complications 😅
-        outputs: ${{ '${{ toJSON(steps.run.outputs) }}' }}
+        outputs_expression: ${{ '${{ toJSON(steps.run.outputs) }}' }}
+        should_set_env_vars: ${{ inputs.env-outputs != 'false' && (inputs.env-outputs || inputs.env-outputs-prefix || inputs.env-outputs-upcase || inputs.env-outputs-on-conflict) && true || false }}
+        env_outputs_prefix: ${{ toJSON(inputs.env-outputs-prefix) }}
+        env_outputs_upcase: ${{ inputs.env-outputs-upcase == 'true' }}
+        env_outputs_on_conflict: ${{ toJSON(inputs.env-outputs-on-conflict || 'overwrite') }}
+        dynamic_uses_repository: ${{ inputs.dynamic-uses-repository }}
+        dynamic_uses_ref: ${{ inputs.dynamic-uses-ref }}
       run: |
         mkdir -p ./.tmp-dynamic-uses &&
         cat <<DYNAMIC_USES_EOF >./.tmp-dynamic-uses/action.yml
         outputs:
           outputs:
-            value: $outputs
+            value: ${outputs_expression}
         runs:
           using: composite
           steps:
-          - run: rm -rf ./.tmp-dynamic-uses
+          - name: Remove temp action
+            run: rm -rf ./.tmp-dynamic-uses
             shell: bash
           - name: Run
             id: run
-            uses: '$(echo "$uses" | sed "s/'/''/g")'
+            uses: ${uses}
             with:
         $(echo "$with" | sed -E "s/^/      /; s/\\\$\\{\\{/\${{'$'}}{{'\$'}}{{/g")
+          - name: Export environment variables
+            if: always() && ${should_set_env_vars}
+            uses: ${dynamic_uses_repository}/set-env-vars@${dynamic_uses_ref}
+            with:
+              variables: ${outputs_expression}
+              prefix: ${env_outputs_prefix}
+              upcase: ${env_outputs_upcase}
+              on-conflict: ${env_outputs_on_conflict}
         DYNAMIC_USES_EOF
     - name: Run
       id: run
