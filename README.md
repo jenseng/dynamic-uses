@@ -142,9 +142,10 @@ If you find this too cumbersome to use, you can specify [`env-outputs: true`](#e
       node-version: 18
     env-outputs: true # this will set a node_version env var for the node-version output
 - run: echo "Installed $node_version"
+  # it can also be used in subsequent step expressions, e.g. `env.node_version`
 ```
 
-Note that could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-on-conflict`](#env-outputs-on-conflict).
+Note that this could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-on-conflict`](#env-outputs-on-conflict).
 
 ## Why would I want to do this?
 
