@@ -145,7 +145,7 @@ If you find this too cumbersome to use, you can specify [`env-outputs: true`](#e
   # it can also be used in subsequent step expressions, e.g. `env.node_version`
 ```
 
-Note that this could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-on-conflict`](#env-outputs-on-conflict).
+Note that this could potentially cause issues if the same variable names are being used elsewhere. To mitigate this and fully control how conflicts are handled, see [`env-outputs-prefix`](#env-outputs-prefix), [`env-outputs-upcase`](#env-outputs-upcase), and [`env-outputs-on-conflict`](#env-outputs-on-conflict). Because all outputs will be set as environment variables, this should not be used when calling actions that set sensitive outputs (e.g. API keys).
 
 ## Why would I want to do this?
 
