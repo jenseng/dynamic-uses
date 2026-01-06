@@ -134,8 +134,7 @@ All outputs from the action will be serialized as a JSON object output named `ou
 If you find this too cumbersome to use, you can specify [`env-outputs: true`](#env-outputs) so that each output gets set as an environment variable. For example:
 
 ```yaml
-- id: setup_node
-  uses: jenseng/dynamic-uses@v1
+- uses: jenseng/dynamic-uses@v1
   with:
     uses: actions/setup-node@${{ inputs.version }}
     with: |
