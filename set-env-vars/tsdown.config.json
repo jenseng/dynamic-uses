@@ -1,6 +1,4 @@
 {
   "entry": "main.ts",
-  "target": "node24",
-  "minify": true,
-  "noExternal": ["@actions/core"]
+  "target": "node24"
 }
