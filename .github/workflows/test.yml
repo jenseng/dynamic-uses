@@ -105,7 +105,7 @@ jobs:
         uses: ./.
         with:
           uses: ./.github/actions/echo
-          env-outputs-prefix: test_
+          env-outputs-prefix: test
       - uses: ./.github/actions/assert-equal
         with:
           expected: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
@@ -126,7 +126,7 @@ jobs:
         with:
           uses: ./.github/actions/echo
           env-outputs-on-conflict: overwrite
-          env-outputs-prefix: overwrite_
+          env-outputs-prefix: overwrite
       - uses: ./.github/actions/assert-equal
         with:
           expected: 🙊
@@ -138,7 +138,7 @@ jobs:
         with:
           uses: ./.github/actions/echo
           env-outputs-on-conflict: preserve
-          env-outputs-prefix: preserve_
+          env-outputs-prefix: preserve
       - uses: ./.github/actions/assert-equal
         with:
           expected: "" # blank, since it's preserved (it was only "uh-oh" within the step)
@@ -152,12 +152,12 @@ jobs:
         with:
           uses: ./.github/actions/echo
           env-outputs-on-conflict: error
-          env-outputs-prefix: error_
+          env-outputs-prefix: error
       - uses: ./.github/actions/assert-equal
         with:
           expected: failure
           actual: ${{ steps.env-outputs-with-on-conflict-error.outcome }}
-  check-dist:
+  check-set-env-vars:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -171,10 +171,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: set-env-vars
-      - name: Build dist
+      - name: Format
+        run: npm run format
+        working-directory: set-env-vars
+      - name: Check for formatting changes
+        run: |
+          git diff --exit-code || {
+            echo "::error::set-env-vars is not formatted. Did you forget to run 'npm run format'?";
+            exit 1;
+          }
+        working-directory: set-env-vars
+      - name: Test
+        run: npm run test
+        working-directory: set-env-vars
+      - name: Build
         run: npm run build
         working-directory: set-env-vars
-      - name: Check dist
+      - name: Check for changes
         run: |
           git diff --exit-code || {
             echo "::error::dist is not up to date. Did you forget to run 'npm run build'?";

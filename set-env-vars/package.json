@@ -10,7 +10,9 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "build": "prettier --write '*.ts' && tsdown"
+    "build": "tsdown",
+    "format": "prettier --write '*.ts'",
+    "test": "node --test *.test.ts"
   },
   "engines": {
     "node": ">=24"

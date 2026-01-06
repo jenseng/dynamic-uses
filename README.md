@@ -95,15 +95,15 @@ with: |
 
 ### `env-outputs`
 
-Whether to set an environment variable for each of the action's outputs. Defaults to `false`. For portability, all non-alphanumeric characters in the output name will be converted to underscores. See [Outputs](#outputs) for more information. 
+Whether to set an environment variable for each of the action's outputs. Defaults to `false`. For portability, all non-alphanumeric characters in the output name will be converted to underscores, and camel-cased output names will be converted to snake case. See [Outputs](#outputs) for more information. 
 
 ### `env-outputs-prefix`
 
-Prefix to use for the output environment variable names, e.g. `setup_node_`. Implies `env-outputs: true`.
+Prefix to use for the output environment variable names. If set, the prefix will be applied along with an underscore, e.g. a prefix of `setup_node` and a `node_version` output will result in a `setup_node_node_version` environment variable. Implies `env-outputs: true`.
 
 ### `env-outputs-upcase`
 
-Whether to capitalize environment variable names. Defaults to `false`. Implies `env-outputs: true` if set explicitly.
+Whether to capitalize environment variable names. Defaults to `false` (i.e. environment variables will be lower-cased). Implies `env-outputs: true` if set explicitly.
 
 ### `env-outputs-on-conflict`
 
