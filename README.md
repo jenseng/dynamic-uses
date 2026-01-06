@@ -103,7 +103,7 @@ Prefix to use for the output environment variable names. If set, the prefix will
 
 ### `env-outputs-upcase`
 
-Whether to capitalize environment variable names. Defaults to `false` (i.e. environment variables will be lower-cased). Implies `env-outputs: true` if set explicitly.
+Whether to capitalize all letters in environment variable names. Defaults to `false` (i.e. environment variables names will be lower-cased). Implies `env-outputs: true` if set explicitly.
 
 ### `env-outputs-on-conflict`
 

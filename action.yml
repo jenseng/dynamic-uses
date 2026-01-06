@@ -16,7 +16,7 @@ inputs:
     description: "Prefix to use for the output environment variable names. Implies `env-outputs: true`"
     required: false
   env-outputs-upcase:
-    description: "Whether to capitalize environment variable names. Default to `false`. Implies `env-outputs: true` if set explicitly"
+    description: "Whether to capitalize all letters in environment variable names. Default to `false`. Implies `env-outputs: true` if set explicitly"
     required: false
   env-outputs-on-conflict:
     description: "Error handling behavior when an output environment variable conflicts with an existing variable of the same name. Defaults to `overwrite`. Possible values are: `overwrite`, `preserve`, `error`. Implies `env-outputs: true` if set explicitly"
