@@ -1,0 +1,16 @@
+on: push
+jobs:
+  preload-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: See if it's checked out
+        shell: bash
+        # because of the later preload-step step, this already exists
+        run: |
+          ls -lr "$GITHUB_WORKSPACE/../../_actions/GarnerCorp/build-actions/main"
+
+      - name: Pre-load build-actions when this composite action is evaluated
+        uses: GarnerCorp/build-actions/google-k8s-pull-secrets@main
+        if: false
+        with:
+          token-file: fake
